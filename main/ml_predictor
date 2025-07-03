@@ -1,0 +1,15 @@
+from sklearn.linear_model import LinearRegression
+import numpy as np
+
+prices = [entry['close'] for entry in data['prices']]
+# Assume you have a list of closing prices
+X = np.array(range(len(prices))).reshape(-1, 1)
+y = np.array(prices)
+
+model = LinearRegression()
+model.fit(X, y)
+
+# Predict the next day
+next_day = np.array([[len(prices)]])
+predicted_price = model.predict(next_day)
+print(f"Predicted next price: {predicted_price[0]}")

@@ -1,0 +1,24 @@
+import csv
+from datetime import datetime
+import requests
+from bs4 import BeautifulSoup
+
+url = "https://finance.yahoo.com/quote/"
+headers = {"User-Agent": "Mozilla/5.0"}
+response = requests.get(url, headers=headers)
+
+j=0
+soup = BeautifulSoup(response.text, "html.parser")
+name[j] = soup.find()
+price_tag[j] = soup.find("fin-streamer", {"data-field": "regularMarketPrice"})
+
+if price_tag[j]:
+    print(name[j] + " Stock Price: " {price_tag[j].text})
+else:
+    print("Price not found.")
+
+#write the price to a CSV file
+with open("stock_prices.csv", "a", newline="") as file:
+    writer = csv.writer(file)
+    for i in file:
+        writer.writerow([datetime.now(), name[i], price_tag[i].text])
