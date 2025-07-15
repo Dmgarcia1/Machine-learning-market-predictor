@@ -1,40 +1,68 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-import matplotlib.pyplot as plt
+import pandas as pd #loads and manipulates csv data
+from sklearn.model_selection import train_test_split #splits data into training and testing sets
+from sklearn.linear_model import LinearRegression #linear regression model for prediction
+from sklearn.metrics import mean_squared_error #calculates the mean squared error of predictions
+import matplotlib.pyplot as plt #for plotting the results
 
 # Load the CSV, df=DataFrame
 df = pd.read_csv("stock_data.csv")
 
-# Convert date to datetime and sort
+# Convert date to datetime format
 df["Date"] = pd.to_datetime(df["Date"])
+
+#sort the values by date
 df = df.sort_values("Date")
 
+#loop through each unique stock symbol
 for symbol in df["Symbol"].unique():
     print(f"\n Training model for {symbol}...")
+    
+    # Create a DataFrame for the specific symbol
+    # This will filter the DataFrame to only include rows where the Symbol matches the current symbol
+    #.copy is used to avoid altering the original DataFrame
     symbol_df = df[df["Symbol"] == symbol].copy()
-    # Use Close price as target, and previous day's price as feature
+    
+    # Adds previous closing price to the row
     symbol_df["Previous_Close"] = symbol_df["Close"].shift(1)
+    # Drop rows with NaN values, which will occur for the first row after shifting
+    # because it has no previous close price
     symbol_df = symbol_df.dropna()
-
+    
+    #X is the input feature (previous day's close price)
     X = symbol_df[["Previous_Close"]]
+    
+    #y is the target variable (current day's close price)
+    # This is the price we want to predict based on the previous day's close
     y = symbol_df["Close"]
 
+    # Check if there are enough data points to split into training and testing sets
     if len(symbol_df) < 5:
         print(f"Skipping {symbol} — not enough data to split.")
         continue
+    
     # Split the data into training and testing sets
     # Using a time-based split to avoid data leakage
+    # test_size=0.2 means 20% of the data will be used for testing, 80% for training
+    # shuffle=False ensures that the order of the data is preserved, which is important for time
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
+    # Initialize the linear regression model
+    # This model will learn the relationship between the previous day's close price and the current day's close
     model = LinearRegression()
+    
+    # Fit the model to the training data
+    # This step trains the model by finding the best-fitting line through the training data
     model.fit(X_train, y_train)
 
+    # Make predictions on the test set
+    # The model uses the previous day's close prices from the test set to predict today's close prices
     predictions = model.predict(X_test)
+    # Calculate the mean squared error of the predictions
+    # This metric tells us how far off our predictions are from the actual values
     mse = mean_squared_error(y_test, predictions)
     print(f"Mean Squared Error for {symbol}: {mse:.2f}")
 
+    # Plot the actual vs predicted prices
     plt.plot(y_test.values, label="Actual")
     plt.plot(predictions, label="Predicted")
     plt.legend()
